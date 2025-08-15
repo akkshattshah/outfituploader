@@ -482,9 +482,9 @@
 
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="showTab('upload')">Upload Outfit</div>
-            <div class="nav-tab" onclick="showTab('rate')">Rate Outfit</div>
-            <div class="nav-tab" onclick="showTab('my-outfits')">My Outfits</div>
+            <div class="nav-tab active" onclick="showTab('upload', event)">Upload Outfit</div>
+            <div class="nav-tab" onclick="showTab('rate', event)">Rate Outfit</div>
+            <div class="nav-tab" onclick="showTab('my-outfits', event)">My Outfits</div>
         </div>
 
         <!-- Upload Outfit Tab -->
@@ -632,7 +632,7 @@
         window.addEventListener('load', initializeApp);
 
         // Tab functionality
-        function showTab(tabName) {
+        function showTab(tabName, event = null) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -643,7 +643,11 @@
 
             // Show selected tab
             document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
+            
+            // Only update tab styling if event is provided
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
 
             // Load data for specific tabs
             if (tabName === 'my-outfits') {
