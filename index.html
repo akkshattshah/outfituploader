@@ -1008,9 +1008,7 @@
             }
 
             const description = document.getElementById('description').value;
-            const outfitId = Date.now().toString();
             const outfit = {
-                id: outfitId,
                 userId: currentUser.uid,
                 userEmail: currentUser.email,
                 userName: currentUser.displayName || 'Anonymous',
@@ -1018,8 +1016,7 @@
                 description: description,
                 createdAt: new Date().toISOString(),
                 totalRatings: 0,
-                averageRating: 0,
-                shareableLink: `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${outfitId}`
+                averageRating: 0
             };
 
             // Retry mechanism
@@ -1034,10 +1031,17 @@
                     const docRef = await addDoc(collection(db, 'outfits'), outfit);
                     console.log('Outfit saved successfully with ID:', docRef.id);
                     
+                    // Add the document ID and shareable link to the outfit
+                    const outfitWithId = {
+                        ...outfit,
+                        id: docRef.id,
+                        shareableLink: `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${docRef.id}`
+                    };
+                    
                     // Update local array
-                    outfits.push(outfit);
+                    outfits.push(outfitWithId);
 
-                    alert('Outfit uploaded successfully! Share this link: ' + outfit.shareableLink);
+                    alert('Outfit uploaded successfully! Share this link: ' + outfitWithId.shareableLink);
                     
                     // Reset form
                     uploadForm.reset();

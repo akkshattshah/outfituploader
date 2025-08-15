@@ -385,8 +385,8 @@
 
         async function loadOutfit(outfitId) {
             try {
-                // Get outfit from Firebase
-                const outfitQuery = query(collection(db, 'outfits'), where('id', '==', outfitId));
+                // Get outfit from Firebase by document ID
+                const outfitQuery = query(collection(db, 'outfits'), where('__name__', '==', outfitId));
                 const outfitSnapshot = await getDocs(outfitQuery);
                 
                 if (outfitSnapshot.empty) {
@@ -500,8 +500,8 @@
                 
                 await addDoc(collection(db, 'ratings'), newRating);
 
-                // Update outfit stats in Firebase
-                const outfitQuery = query(collection(db, 'outfits'), where('id', '==', currentOutfit.id));
+                // Update outfit stats in Firebase by document ID
+                const outfitQuery = query(collection(db, 'outfits'), where('__name__', '==', currentOutfit.id));
                 const outfitSnapshot = await getDocs(outfitQuery);
                 if (!outfitSnapshot.empty) {
                     const outfitDoc = outfitSnapshot.docs[0];
