@@ -480,6 +480,7 @@
 
         uploadForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            console.log('Upload form submitted');
             
             if (!photoInput.files[0]) {
                 alert('Please select an image');
@@ -487,14 +488,15 @@
             }
 
             const description = document.getElementById('description').value;
+            const outfitId = Date.now().toString();
             const outfit = {
-                id: Date.now().toString(),
+                id: outfitId,
                 image: preview.src,
                 description: description,
                 createdAt: new Date().toISOString(),
                 totalRatings: 0,
                 averageRating: 0,
-                shareableLink: `${window.location.origin}${window.location.pathname}?outfit=${outfit.id}`
+                shareableLink: `${window.location.origin}${window.location.pathname}?outfit=${outfitId}`
             };
 
             outfits.push(outfit);
