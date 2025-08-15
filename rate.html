@@ -406,7 +406,7 @@
                 }
 
                 // Get ratings from Firebase
-                const ratingsQuery = query(collection(db, 'ratings'), where('outfitId', '==', outfitId));
+                const ratingsQuery = query(collection(db, 'ratings'), where('outfitId', '==', currentOutfit.id));
                 const ratingsSnapshot = await getDocs(ratingsQuery);
                 const ratings = ratingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
