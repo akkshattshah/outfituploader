@@ -22,5 +22,17 @@ service cloud.firestore {
       // No updates or deletes for ratings (to maintain integrity)
       allow update, delete: if false;
     }
+    
+    // Users collection - Allow creation during signup
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      // Allow creation during signup (user is authenticated at this point)
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+      // Users can update their own data
+      allow update: if request.auth != null && request.auth.uid == resource.data.uid;
+      // Users can delete their own data
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
+    }
   }
 }
