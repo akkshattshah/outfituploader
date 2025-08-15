@@ -384,10 +384,20 @@
                 return;
             }
 
-            const comment = document.getElementById('comment').value;
-            
-            // Get existing ratings
+            // Check if user has already rated this outfit
+            const userFingerprint = getUserFingerprint();
             const ratings = JSON.parse(localStorage.getItem('ratings') || '[]');
+            const existingRating = ratings.find(r => 
+                r.outfitId === currentOutfit.id && 
+                r.userFingerprint === userFingerprint
+            );
+
+            if (existingRating) {
+                alert('You have already rated this outfit! Each person can only rate once.');
+                return;
+            }
+
+            const comment = document.getElementById('comment').value;
             
             // Add new rating
             const newRating = {
@@ -395,7 +405,8 @@
                 outfitId: currentOutfit.id,
                 rating: currentRating,
                 comment: comment,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                userFingerprint: userFingerprint
             };
             
             ratings.push(newRating);
@@ -414,6 +425,32 @@
 
             showSuccess();
         });
+
+        // Function to generate a simple user fingerprint
+        function getUserFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('User fingerprint', 2, 2);
+            
+            const fingerprint = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                canvas.toDataURL()
+            ].join('|');
+            
+            // Create a simple hash
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                const char = fingerprint.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return hash.toString();
+        }
     </script>
 </body>
 </html> 

@@ -654,6 +654,13 @@
                 return;
             }
 
+            // Check if user has already rated this outfit
+            const userFingerprint = getUserFingerprint();
+            const existingRating = ratings.find(r => 
+                r.outfitId === outfitId && 
+                r.userFingerprint === userFingerprint
+            );
+
             // Display outfit
             document.getElementById('outfit-image').src = currentOutfit.image;
             document.getElementById('outfit-description').textContent = currentOutfit.description || '';
@@ -661,6 +668,28 @@
                 `⭐ ${currentOutfit.averageRating.toFixed(1)} (${currentOutfit.totalRatings} ratings)`;
             
             ratingSection.classList.remove('hidden');
+
+            // Show if user has already rated
+            if (existingRating) {
+                const ratingText = document.getElementById('rating-text');
+                ratingText.textContent = `You already rated this outfit: ${existingRating.rating}/5`;
+                ratingText.style.color = '#667eea';
+                ratingText.style.fontWeight = '600';
+                
+                // Disable the form
+                document.getElementById('submit-rating-form').style.opacity = '0.5';
+                document.getElementById('submit-rating-form').style.pointerEvents = 'none';
+                
+                // Show existing rating
+                setRating(existingRating.rating);
+            } else {
+                // Reset form for new rating
+                document.getElementById('rating-text').textContent = '';
+                document.getElementById('submit-rating-form').style.opacity = '1';
+                document.getElementById('submit-rating-form').style.pointerEvents = 'auto';
+                currentRating = 0;
+                document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
+            }
         });
 
         function setRating(rating) {
@@ -686,13 +715,26 @@
                 return;
             }
 
+            // Check if user has already rated this outfit
+            const userFingerprint = getUserFingerprint();
+            const existingRating = ratings.find(r => 
+                r.outfitId === currentOutfit.id && 
+                r.userFingerprint === userFingerprint
+            );
+
+            if (existingRating) {
+                alert('You have already rated this outfit! Each person can only rate once.');
+                return;
+            }
+
             const comment = document.getElementById('comment').value;
             const rating = {
                 id: Date.now().toString(),
                 outfitId: currentOutfit.id,
                 rating: currentRating,
                 comment: comment,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                userFingerprint: userFingerprint
             };
 
             ratings.push(rating);
@@ -714,6 +756,32 @@
             document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
             document.getElementById('rating-text').textContent = '';
         });
+
+        // Function to generate a simple user fingerprint
+        function getUserFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('User fingerprint', 2, 2);
+            
+            const fingerprint = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                canvas.toDataURL()
+            ].join('|');
+            
+            // Create a simple hash
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                const char = fingerprint.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return hash.toString();
+        }
 
         // Load outfits
         function loadOutfits() {
