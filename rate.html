@@ -494,8 +494,8 @@
                     comment: comment,
                     createdAt: new Date().toISOString(),
                     userFingerprint: userFingerprint,
-                    raterEmail: currentUser ? currentUser.email : 'anonymous',
-                    raterId: currentUser ? currentUser.uid : null
+                    raterEmail: (currentUser && currentUser.email) ? currentUser.email : 'anonymous',
+                    raterId: (currentUser && currentUser.uid) ? currentUser.uid : null
                 };
                 
                 await addDoc(collection(db, 'ratings'), newRating);
@@ -518,7 +518,24 @@
                 showSuccess();
             } catch (error) {
                 console.error('Error submitting rating:', error);
-                alert('Error submitting rating. Please try again.');
+                console.error('Error details:', {
+                    code: error.code,
+                    message: error.message,
+                    stack: error.stack
+                });
+                
+                let errorMessage = 'Error submitting rating. ';
+                if (error.code === 'permission-denied') {
+                    errorMessage += 'Firebase permissions issue. Please check your Firebase configuration.';
+                } else if (error.code === 'unavailable') {
+                    errorMessage += 'Firebase is temporarily unavailable. Please try again in a moment.';
+                } else if (error.code === 'network-error') {
+                    errorMessage += 'Network connection issue. Please check your internet connection.';
+                } else {
+                    errorMessage += `Error code: ${error.code || 'unknown'}. Please try again.`;
+                }
+                
+                alert(errorMessage);
             }
         });
 
