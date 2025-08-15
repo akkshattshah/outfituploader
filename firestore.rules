@@ -7,8 +7,9 @@ service cloud.firestore {
       allow read: if true;
       // Only authenticated users can create outfits
       allow create: if request.auth != null;
-      // Only the outfit owner can update their own outfits
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Only the outfit owner can update their own outfits, OR allow rating updates (totalRatings, averageRating)
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId || 
+                   (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalRatings', 'averageRating']));
       // Only the outfit owner can delete their own outfits
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
