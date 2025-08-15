@@ -14,6 +14,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getStorage, ref as storageRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -30,10 +31,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         // Make Firebase available globally
         window.db = db;
         window.auth = auth;
+        window.storage = storage;
         window.addDoc = addDoc;
         window.getDocs = getDocs;
         window.updateDoc = updateDoc;
@@ -46,6 +49,9 @@
         window.signOut = signOut;
         window.onAuthStateChanged = onAuthStateChanged;
         window.updateProfile = updateProfile;
+        window.storageRef = storageRef;
+        window.uploadString = uploadString;
+        window.getDownloadURL = getDownloadURL;
         
         // Signal that Firebase is ready
         window.firebaseReady = true;
@@ -1011,11 +1017,20 @@
             }
 
             const description = document.getElementById('description').value;
+            
+            // 1) Upload image to Firebase Storage from data URL to avoid Firestore size limits
+            const imageDataUrl = preview.src;
+            const imagePath = `outfits/${currentUser.uid}/${Date.now()}.jpg`;
+            const imgRef = storageRef(storage, imagePath);
+            await uploadString(imgRef, imageDataUrl, 'data_url');
+            const downloadURL = await getDownloadURL(imgRef);
+            
+            // 2) Prepare Firestore document with only the image URL
             const outfit = {
                 userId: currentUser.uid,
                 userEmail: currentUser.email,
                 userName: currentUser.displayName || 'Anonymous',
-                image: preview.src,
+                image: downloadURL,
                 description: description,
                 createdAt: new Date().toISOString(),
                 totalRatings: 0,
