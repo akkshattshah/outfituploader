@@ -10,6 +10,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -25,9 +26,11 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // Make Firebase available globally
         window.db = db;
+        window.auth = auth;
         window.addDoc = addDoc;
         window.getDocs = getDocs;
         window.updateDoc = updateDoc;
@@ -35,6 +38,10 @@
         window.doc = doc;
         window.query = query;
         window.where = where;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
         
         // Signal that Firebase is ready
         window.firebaseReady = true;
@@ -453,6 +460,36 @@
             display: block;
         }
 
+        /* Authentication Styles */
+        .auth-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        .auth-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .auth-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 16px;
@@ -480,47 +517,103 @@
             <p>Get anonymous feedback on your style</p>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-            <div class="nav-tab active" onclick="showTab('upload', event)">Upload Outfit</div>
-            <div class="nav-tab" onclick="showTab('my-outfits', event)">My Outfits</div>
-        </div>
-
-        <!-- Upload Outfit Tab -->
-        <div id="upload-tab" class="tab-content active">
-            <div class="card">
-                <h2 class="text-center mb-4">Upload Your Outfit</h2>
-                
-                <form id="upload-form">
+        <!-- Authentication Section -->
+        <div id="auth-section" class="card">
+            <div id="auth-loading" class="loading">Loading...</div>
+            
+            <!-- Login Form -->
+            <div id="login-form" style="display: none;">
+                <h2 class="text-center mb-4">Welcome Back</h2>
+                <form id="login-form-element">
                     <div class="form-group">
-                        <label>Upload Photo</label>
-                        <div class="upload-area" id="upload-area">
-                            <div class="upload-icon">📸</div>
-                            <p>Tap to select or drag & drop an image</p>
-                            <input type="file" id="photo-input" accept="image/*" style="display: none;">
-                        </div>
-                        <img id="preview" class="preview-image hidden">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" class="form-control" required>
                     </div>
-                    
                     <div class="form-group">
-                        <label for="description">Description (Optional)</label>
-                        <textarea id="description" class="form-control" rows="3" 
-                                placeholder="Describe your outfit, occasion, or ask for specific feedback..."></textarea>
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" required>
                     </div>
-                    
-                    <button type="submit" class="btn">Upload Outfit</button>
+                    <button type="submit" class="btn">Sign In</button>
                 </form>
+                <div class="text-center mt-4">
+                    <p>Don't have an account? <a href="#" onclick="showSignupForm()" class="auth-link">Sign up</a></p>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-form" style="display: none;">
+                <h2 class="text-center mb-4">Create Account</h2>
+                <form id="signup-form-element">
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" class="form-control" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn">Create Account</button>
+                </form>
+                <div class="text-center mt-4">
+                    <p>Already have an account? <a href="#" onclick="showLoginForm()" class="auth-link">Sign in</a></p>
+                </div>
+            </div>
+
+            <!-- User Profile -->
+            <div id="user-profile" style="display: none;">
+                <div class="text-center mb-4">
+                    <h3>Welcome, <span id="user-email"></span>!</h3>
+                    <button onclick="signOutUser()" class="btn btn-secondary">Sign Out</button>
+                </div>
             </div>
         </div>
 
+        <!-- Main App Content -->
+        <div id="main-content" style="display: none;">
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="showTab('upload', event)">Upload Outfit</div>
+                <div class="nav-tab" onclick="showTab('my-outfits', event)">My Outfits</div>
+            </div>
 
+            <!-- Upload Outfit Tab -->
+            <div id="upload-tab" class="tab-content active">
+                <div class="card">
+                    <h2 class="text-center mb-4">Upload Your Outfit</h2>
+                    
+                    <form id="upload-form">
+                        <div class="form-group">
+                            <label>Upload Photo</label>
+                            <div class="upload-area" id="upload-area">
+                                <div class="upload-icon">📸</div>
+                                <p>Tap to select or drag & drop an image</p>
+                                <input type="file" id="photo-input" accept="image/*" style="display: none;">
+                            </div>
+                            <img id="preview" class="preview-image hidden">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Description (Optional)</label>
+                            <textarea id="description" class="form-control" rows="3" 
+                                    placeholder="Describe your outfit, occasion, or ask for specific feedback..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn">Upload Outfit</button>
+                    </form>
+                </div>
+            </div>
 
-        <!-- My Outfits Tab -->
-        <div id="my-outfits-tab" class="tab-content">
-            <div class="card">
-                <h2 class="text-center mb-4">My Outfits</h2>
-                <div id="outfits-list">
-                    <div class="loading">No outfits uploaded yet. Upload your first outfit to get started!</div>
+            <!-- My Outfits Tab -->
+            <div id="my-outfits-tab" class="tab-content">
+                <div class="card">
+                    <h2 class="text-center mb-4">My Outfits</h2>
+                    <div id="outfits-list">
+                        <div class="loading">No outfits uploaded yet. Upload your first outfit to get started!</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -530,17 +623,157 @@
         // Firebase database storage
         let outfits = [];
         let ratings = [];
+        let currentUser = null;
+
+        // Authentication functions
+        function showLoginForm() {
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('auth-loading').style.display = 'none';
+        }
+
+        function showSignupForm() {
+            document.getElementById('signup-form').style.display = 'block';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('auth-loading').style.display = 'none';
+        }
+
+        function showUserProfile(user) {
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-profile').style.display = 'block';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+
+        function showAuthSection() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('main-content').style.display = 'none';
+            showLoginForm();
+        }
+
+        async function signOutUser() {
+            try {
+                await signOut(auth);
+                currentUser = null;
+                outfits = [];
+                ratings = [];
+                showAuthSection();
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Error signing out. Please try again.');
+            }
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                currentUser = userCredential.user;
+                showUserProfile(currentUser);
+                loadDataFromFirebase();
+            } catch (error) {
+                console.error('Login error:', error);
+                let errorMessage = 'Login failed. ';
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage += 'No account found with this email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage += 'Incorrect password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage += 'Invalid email address.';
+                } else {
+                    errorMessage += error.message;
+                }
+                alert(errorMessage);
+            }
+        });
+
+        // Handle signup form submission
+        document.getElementById('signup-form-element').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+            
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                currentUser = userCredential.user;
+                showUserProfile(currentUser);
+                loadDataFromFirebase();
+            } catch (error) {
+                console.error('Signup error:', error);
+                let errorMessage = 'Account creation failed. ';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage += 'An account with this email already exists.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage += 'Invalid email address.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage += 'Password is too weak.';
+                } else {
+                    errorMessage += error.message;
+                }
+                alert(errorMessage);
+            }
+        });
+
+        // Initialize authentication state
+        function initializeAuth() {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    showUserProfile(user);
+                    loadDataFromFirebase();
+                } else {
+                    currentUser = null;
+                    outfits = [];
+                    ratings = [];
+                    showAuthSection();
+                }
+            });
+        }
 
         // Load data from Firebase on page load
         async function loadDataFromFirebase() {
+            if (!currentUser) {
+                console.log('No user logged in, skipping data load');
+                return;
+            }
+
             try {
-                // Load outfits
-                const outfitsSnapshot = await getDocs(collection(db, 'outfits'));
+                // Load outfits for current user
+                const outfitsQuery = query(collection(db, 'outfits'), where('userId', '==', currentUser.uid));
+                const outfitsSnapshot = await getDocs(outfitsQuery);
                 outfits = outfitsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Load ratings
-                const ratingsSnapshot = await getDocs(collection(db, 'ratings'));
-                ratings = ratingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Load ratings for current user's outfits
+                const outfitIds = outfits.map(outfit => outfit.id);
+                let allRatings = [];
+                
+                if (outfitIds.length > 0) {
+                    const ratingsQuery = query(collection(db, 'ratings'), where('outfitId', 'in', outfitIds));
+                    const ratingsSnapshot = await getDocs(ratingsQuery);
+                    allRatings = ratingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                }
+                
+                ratings = allRatings;
 
                 console.log('Data loaded from Firebase:', { outfits: outfits.length, ratings: ratings.length });
             } catch (error) {
@@ -551,9 +784,9 @@
         // Initialize data loading - wait for Firebase to be ready
         function initializeApp() {
             if (window.firebaseReady) {
-                loadDataFromFirebase();
+                initializeAuth();
             } else {
-                window.addEventListener('firebaseReady', loadDataFromFirebase);
+                window.addEventListener('firebaseReady', initializeAuth);
             }
         }
         
@@ -654,6 +887,8 @@
             const outfitId = Date.now().toString();
             const outfit = {
                 id: outfitId,
+                userId: currentUser.uid,
+                userEmail: currentUser.email,
                 image: preview.src,
                 description: description,
                 createdAt: new Date().toISOString(),

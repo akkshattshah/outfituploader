@@ -10,6 +10,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -25,9 +26,11 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // Make Firebase available globally
         window.db = db;
+        window.auth = auth;
         window.addDoc = addDoc;
         window.getDocs = getDocs;
         window.updateDoc = updateDoc;
@@ -35,6 +38,10 @@
         window.doc = doc;
         window.query = query;
         window.where = where;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
         
         // Signal that Firebase is ready
         window.firebaseReady = true;
@@ -350,17 +357,23 @@
     <script>
         let currentRating = 0;
         let currentOutfit = null;
+        let currentUser = null;
 
         // Initialize app when Firebase is ready
         function initializeApp() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const outfitId = urlParams.get('outfit');
+            // Check authentication state
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const outfitId = urlParams.get('outfit');
 
-            if (!outfitId) {
-                showError('No outfit ID provided');
-            } else {
-                loadOutfit(outfitId);
-            }
+                if (!outfitId) {
+                    showError('No outfit ID provided');
+                } else {
+                    loadOutfit(outfitId);
+                }
+            });
         }
 
         // Wait for Firebase to be ready
@@ -480,7 +493,9 @@
                     rating: currentRating,
                     comment: comment,
                     createdAt: new Date().toISOString(),
-                    userFingerprint: userFingerprint
+                    userFingerprint: userFingerprint,
+                    raterEmail: currentUser ? currentUser.email : 'anonymous',
+                    raterId: currentUser ? currentUser.uid : null
                 };
                 
                 await addDoc(collection(db, 'ratings'), newRating);
