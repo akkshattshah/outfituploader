@@ -8,6 +8,11 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -66,10 +71,11 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: #333;
+            color: #1a1a1a;
+            line-height: 1.6;
         }
 
         .container {
@@ -79,12 +85,13 @@
         }
 
         .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            padding: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 32px;
             margin: 20px 0;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .header {
@@ -96,19 +103,22 @@
             font-size: 2.5rem;
             color: #667eea;
             margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
         .header p {
-            color: #666;
+            color: #4a5568;
             font-size: 1.1rem;
+            font-weight: 500;
         }
 
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
+            padding: 18px 36px;
+            border-radius: 14px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
@@ -118,6 +128,8 @@
             text-align: center;
             width: 100%;
             margin: 8px 0;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            letter-spacing: 0.01em;
         }
 
         .btn:hover {
@@ -139,57 +151,72 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #1a1a1a;
+            font-size: 15px;
+            letter-spacing: 0.01em;
         }
 
         .form-control {
             width: 100%;
-            padding: 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 12px;
+            padding: 18px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            color: #1a1a1a;
+            font-weight: 500;
         }
 
         .form-control:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .upload-area {
             border: 3px dashed #667eea;
-            border-radius: 16px;
-            padding: 40px 20px;
+            border-radius: 18px;
+            padding: 50px 30px;
             text-align: center;
-            background: #f8f9ff;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
         }
 
         .upload-area:hover {
             border-color: #764ba2;
-            background: #f0f2ff;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
         }
 
         .upload-area.dragover {
             border-color: #764ba2;
-            background: #e8ecff;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            transform: scale(1.02);
         }
 
         .upload-icon {
-            font-size: 48px;
+            font-size: 56px;
             color: #667eea;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
         }
 
         .preview-image {
             max-width: 100%;
             max-height: 300px;
-            border-radius: 12px;
-            margin: 16px 0;
+            border-radius: 16px;
+            margin: 20px 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.8);
         }
 
         .rating-stars {
@@ -443,22 +470,36 @@
 
         .nav-tabs {
             display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 24px;
+            border-bottom: 2px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 4px;
+            backdrop-filter: blur(10px);
         }
 
         .nav-tab {
             flex: 1;
-            padding: 16px;
+            padding: 16px 20px;
             text-align: center;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
+            border-radius: 12px;
             transition: all 0.3s ease;
             font-weight: 600;
+            color: #4a5568;
+            font-size: 15px;
+            letter-spacing: 0.01em;
         }
 
         .nav-tab.active {
-            border-bottom-color: #667eea;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            font-weight: 700;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
             color: #667eea;
         }
 
@@ -629,14 +670,14 @@
             <!-- Upload Outfit Tab -->
             <div id="upload-tab" class="tab-content active">
                 <div class="card">
-                    <h2 class="text-center mb-4">Upload Your Outfit</h2>
+                                         <h2 class="text-center mb-4" style="font-size: 2rem; font-weight: 700; color: #1a1a1a; margin-bottom: 24px; letter-spacing: -0.02em;">Upload Your Outfit</h2>
                     
                     <form id="upload-form">
                         <div class="form-group">
                             <label>Upload Photo</label>
                             <div class="upload-area" id="upload-area">
                                 <div class="upload-icon">📸</div>
-                                <p>Tap to select or drag & drop an image</p>
+                                                                 <p style="font-size: 16px; color: #4a5568; font-weight: 500; margin: 0;">Tap to select or drag & drop an image</p>
                                 <input type="file" id="photo-input" accept="image/*" style="display: none;">
                             </div>
                             <img id="preview" class="preview-image hidden">
@@ -644,8 +685,8 @@
                         
                         <div class="form-group">
                             <label for="description">Description (Optional)</label>
-                            <textarea id="description" class="form-control" rows="3" 
-                                    placeholder="Describe your outfit, occasion, or ask for specific feedback..."></textarea>
+                                                         <textarea id="description" class="form-control" rows="3" 
+                                     placeholder="Describe your outfit, occasion, or ask for specific feedback..." style="resize: vertical; min-height: 100px;"></textarea>
                         </div>
                         
                         <button type="submit" class="btn">Upload Outfit</button>
