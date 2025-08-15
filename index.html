@@ -631,7 +631,7 @@
         
         window.addEventListener('load', initializeApp);
 
-        // Tab functionality
+        // Tab functionality - Fixed event handling
         function showTab(tabName, event = null) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -644,8 +644,8 @@
             // Show selected tab
             document.getElementById(tabName + '-tab').classList.add('active');
             
-            // Only update tab styling if event is provided
-            if (event && event.target) {
+            // Only update tab styling if event is provided and valid
+            if (event && event.target && event.target.classList) {
                 event.target.classList.add('active');
             }
 
