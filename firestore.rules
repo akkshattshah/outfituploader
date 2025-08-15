@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Outfits collection
+    match /outfits/{outfitId} {
+      // Anyone can read outfits (for rating)
+      allow read: if true;
+      // Only authenticated users can create outfits
+      allow create: if request.auth != null;
+      // Only the outfit owner can update their own outfits
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Only the outfit owner can delete their own outfits
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Ratings collection
+    match /ratings/{ratingId} {
+      // Anyone can read ratings
+      allow read: if true;
+      // Anyone can create ratings (anonymous rating allowed)
+      allow create: if true;
+      // No updates or deletes for ratings (to maintain integrity)
+      allow update, delete: if false;
+    }
+  }
+}
