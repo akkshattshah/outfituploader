@@ -534,9 +534,7 @@
                         <img id="outfit-image" class="outfit-image">
                         <div class="outfit-content">
                             <p id="outfit-description" class="outfit-description"></p>
-                            <div class="outfit-stats">
-                                <span id="outfit-stats"></span>
-                            </div>
+                            <!-- Stats hidden from raters to prevent bias -->
                         </div>
                     </div>
 
@@ -822,8 +820,7 @@
             // Display outfit
             document.getElementById('outfit-image').src = currentOutfit.image;
             document.getElementById('outfit-description').textContent = currentOutfit.description || '';
-            document.getElementById('outfit-stats').textContent = 
-                `⭐ ${currentOutfit.averageRating.toFixed(1)} (${currentOutfit.totalRatings} ratings)`;
+            // Stats hidden from raters to prevent bias
             
             ratingSection.classList.remove('hidden');
 

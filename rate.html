@@ -286,11 +286,7 @@
                 
                 <div id="description" class="description" style="display: none;"></div>
                 
-                <div class="stats">
-                    <span id="average-rating">⭐ 0.0</span>
-                    <span>•</span>
-                    <span id="total-ratings">0 ratings</span>
-                </div>
+                <!-- Rating stats hidden from raters to prevent bias -->
 
                 <form id="rating-form-element">
                     <div class="rating-section">
@@ -401,13 +397,7 @@
                 const ratings = ratingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 // Update stats
-                const totalRatings = ratings.length;
-                const averageRating = totalRatings > 0 
-                    ? (ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1)
-                    : '0.0';
-
-                document.getElementById('average-rating').textContent = `⭐ ${averageRating}`;
-                document.getElementById('total-ratings').textContent = `${totalRatings} rating${totalRatings !== 1 ? 's' : ''}`;
+                // Stats are hidden from raters to prevent bias
 
                 // Show rating form
                 document.getElementById('loading').style.display = 'none';
