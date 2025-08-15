@@ -653,33 +653,25 @@
                 </div>
             </div>
 
-            <!-- My Account Tab -->
-            <div id="my-account-tab" class="tab-content">
-                <div class="card">
-                    <h2 class="text-center mb-4">My Account</h2>
-                    <div class="account-info">
-                        <div class="info-item">
-                            <label>Full Name:</label>
-                            <span id="account-fullname">Loading...</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Email:</label>
-                            <span id="account-email">Loading...</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Account Created:</label>
-                            <span id="account-created">Loading...</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Total Outfits:</label>
-                            <span id="account-outfits">Loading...</span>
-                        </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <button onclick="signOutUser()" class="btn btn-secondary">Sign Out</button>
-                    </div>
-                </div>
-            </div>
+                         <!-- My Account Tab -->
+             <div id="my-account-tab" class="tab-content">
+                 <div class="card">
+                     <h2 class="text-center mb-4">My Account</h2>
+                     <div class="account-info">
+                         <div class="info-item">
+                             <label>Full Name:</label>
+                             <span id="account-fullname">Loading...</span>
+                         </div>
+                         <div class="info-item">
+                             <label>Email:</label>
+                             <span id="account-email">Loading...</span>
+                         </div>
+                     </div>
+                     <div class="text-center mt-4">
+                         <button onclick="signOutUser()" class="btn btn-secondary">Sign Out</button>
+                     </div>
+                 </div>
+             </div>
         </div>
     </div>
 
@@ -863,41 +855,36 @@
             }
         }
 
-        // Load user profile data
-        async function loadUserProfile() {
-            try {
-                const userQuery = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
-                const userSnapshot = await getDocs(userQuery);
-                
-                if (!userSnapshot.empty) {
-                    const userData = userSnapshot.docs[0].data();
-                    updateAccountInfo(userData);
-                } else {
-                    // Fallback for users who signed up before we added the users collection
-                    updateAccountInfo({
-                        fullName: 'Not set',
-                        email: currentUser.email,
-                        createdAt: currentUser.metadata.creationTime
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading user profile:', error);
-                updateAccountInfo({
-                    fullName: 'Error loading',
-                    email: currentUser.email,
-                    createdAt: 'Unknown'
-                });
-            }
-        }
+                 // Load user profile data
+         async function loadUserProfile() {
+             try {
+                 const userQuery = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
+                 const userSnapshot = await getDocs(userQuery);
+                 
+                 if (!userSnapshot.empty) {
+                     const userData = userSnapshot.docs[0].data();
+                     updateAccountInfo(userData);
+                 } else {
+                     // Fallback for users who signed up before we added the users collection
+                     updateAccountInfo({
+                         fullName: currentUser.displayName || 'Not set',
+                         email: currentUser.email
+                     });
+                 }
+             } catch (error) {
+                 console.error('Error loading user profile:', error);
+                 updateAccountInfo({
+                     fullName: currentUser.displayName || 'Not set',
+                     email: currentUser.email
+                 });
+             }
+         }
 
-        // Update account information display
-        function updateAccountInfo(userData) {
-            document.getElementById('account-fullname').textContent = userData.fullName || 'Not set';
-            document.getElementById('account-email').textContent = userData.email || currentUser.email;
-            document.getElementById('account-created').textContent = userData.createdAt ? 
-                new Date(userData.createdAt).toLocaleDateString() : 'Unknown';
-            document.getElementById('account-outfits').textContent = outfits.length;
-        }
+                 // Update account information display
+         function updateAccountInfo(userData) {
+             document.getElementById('account-fullname').textContent = userData.fullName || 'Not set';
+             document.getElementById('account-email').textContent = userData.email || currentUser.email;
+         }
 
         // Initialize data loading - wait for Firebase to be ready
         function initializeApp() {
