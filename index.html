@@ -251,6 +251,35 @@
             color: #666;
         }
 
+        .rating-breakdown {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .rating-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .rating-item:last-child {
+            border-bottom: none;
+        }
+
+        .rating-item .rating-stars {
+            font-size: 16px;
+            color: #ffd700;
+        }
+
+        .rating-item .rating-count {
+            font-weight: 600;
+            color: #495057;
+        }
+
         .nav-tabs {
             display: flex;
             margin-bottom: 20px;
@@ -602,26 +631,60 @@
                 return;
             }
 
-            outfitsList.innerHTML = outfits.map(outfit => `
-                <div class="outfit-card">
-                    <img src="${outfit.image}" class="outfit-image" alt="Outfit">
-                    <div class="outfit-content">
-                        ${outfit.description ? `<p class="outfit-description">${outfit.description}</p>` : ''}
-                        <div class="outfit-stats">
-                            <span>⭐ ${outfit.averageRating.toFixed(1)} (${outfit.totalRatings} ratings)</span>
-                            <span>${new Date(outfit.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <div class="link-display">
-                            <p style="margin-bottom: 8px; font-weight: 600;">Shareable Link:</p>
-                            <input type="text" value="${outfit.shareableLink}" readonly onclick="this.select()">
-                            <button class="btn" onclick="copyToClipboard('${outfit.shareableLink}')" 
-                                    style="margin-top: 12px; font-size: 14px; padding: 8px 16px;">
-                                Copy Link
-                            </button>
+            outfitsList.innerHTML = outfits.map(outfit => {
+                // Get rating breakdown for this outfit
+                const outfitRatings = ratings.filter(r => r.outfitId === outfit.id);
+                const ratingBreakdown = getRatingBreakdown(outfitRatings);
+                
+                return `
+                    <div class="outfit-card">
+                        <img src="${outfit.image}" class="outfit-image" alt="Outfit">
+                        <div class="outfit-content">
+                            ${outfit.description ? `<p class="outfit-description">${outfit.description}</p>` : ''}
+                            <div class="outfit-stats">
+                                <span>⭐ ${outfit.averageRating.toFixed(1)} (${outfit.totalRatings} ratings)</span>
+                                <span>${new Date(outfit.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            
+                            ${outfit.totalRatings > 0 ? `
+                                <div class="rating-breakdown">
+                                    <h4 style="margin: 16px 0 8px 0; color: #333;">Rating Breakdown:</h4>
+                                    ${ratingBreakdown.map(item => `
+                                        <div class="rating-item">
+                                            <span class="rating-stars">${'⭐'.repeat(item.rating)}</span>
+                                            <span class="rating-count">${item.count} ${item.count === 1 ? 'person' : 'people'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            <div class="link-display">
+                                <p style="margin-bottom: 8px; font-weight: 600;">Shareable Link:</p>
+                                <input type="text" value="${outfit.shareableLink}" readonly onclick="this.select()">
+                                <button class="btn" onclick="copyToClipboard('${outfit.shareableLink}')" 
+                                        style="margin-top: 12px; font-size: 14px; padding: 8px 16px;">
+                                    Copy Link
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        // Function to get rating breakdown
+        function getRatingBreakdown(outfitRatings) {
+            const breakdown = {};
+            
+            // Count ratings for each star level
+            outfitRatings.forEach(rating => {
+                breakdown[rating.rating] = (breakdown[rating.rating] || 0) + 1;
+            });
+            
+            // Convert to array and sort by rating (highest first)
+            return Object.entries(breakdown)
+                .map(([rating, count]) => ({ rating: parseInt(rating), count }))
+                .sort((a, b) => b.rating - a.rating);
         }
 
         function copyToClipboard(text) {
