@@ -4,6 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rate This Outfit - OutfitRater</title>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZgpkVwyzxOS35iKTsAA9gpnZQIhXDf1c",
+            authDomain: "outfit-rater-363e5.firebaseapp.com",
+            projectId: "outfit-rater-363e5",
+            storageBucket: "outfit-rater-363e5.firebasestorage.app",
+            messagingSenderId: "866553650187",
+            appId: "1:866553650187:web:c98eb889c2f5e908f13b0e",
+            measurementId: "G-954X71CHWJ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase available globally
+        window.db = db;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.updateDoc = updateDoc;
+        window.collection = collection;
+        window.doc = doc;
+        window.query = query;
+        window.where = where;
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -328,39 +361,48 @@
             loadOutfit(outfitId);
         }
 
-        function loadOutfit(outfitId) {
-            // Get outfits from localStorage
-            const outfits = JSON.parse(localStorage.getItem('outfits') || '[]');
-            const ratings = JSON.parse(localStorage.getItem('ratings') || '[]');
-            
-            currentOutfit = outfits.find(o => o.id === outfitId);
-            
-            if (!currentOutfit) {
-                showError('Outfit not found');
-                return;
+        async function loadOutfit(outfitId) {
+            try {
+                // Get outfit from Firebase
+                const outfitQuery = query(collection(db, 'outfits'), where('id', '==', outfitId));
+                const outfitSnapshot = await getDocs(outfitQuery);
+                
+                if (outfitSnapshot.empty) {
+                    showError('Outfit not found');
+                    return;
+                }
+                
+                currentOutfit = { id: outfitSnapshot.docs[0].id, ...outfitSnapshot.docs[0].data() };
+
+                // Display outfit
+                document.getElementById('outfit-image').src = currentOutfit.image;
+                
+                if (currentOutfit.description) {
+                    document.getElementById('description').textContent = currentOutfit.description;
+                    document.getElementById('description').style.display = 'block';
+                }
+
+                // Get ratings from Firebase
+                const ratingsQuery = query(collection(db, 'ratings'), where('outfitId', '==', outfitId));
+                const ratingsSnapshot = await getDocs(ratingsQuery);
+                const ratings = ratingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Update stats
+                const totalRatings = ratings.length;
+                const averageRating = totalRatings > 0 
+                    ? (ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1)
+                    : '0.0';
+
+                document.getElementById('average-rating').textContent = `⭐ ${averageRating}`;
+                document.getElementById('total-ratings').textContent = `${totalRatings} rating${totalRatings !== 1 ? 's' : ''}`;
+
+                // Show rating form
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('rating-form').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading outfit:', error);
+                showError('Error loading outfit');
             }
-
-            // Display outfit
-            document.getElementById('outfit-image').src = currentOutfit.image;
-            
-            if (currentOutfit.description) {
-                document.getElementById('description').textContent = currentOutfit.description;
-                document.getElementById('description').style.display = 'block';
-            }
-
-            // Update stats
-            const outfitRatings = ratings.filter(r => r.outfitId === outfitId);
-            const totalRatings = outfitRatings.length;
-            const averageRating = totalRatings > 0 
-                ? (outfitRatings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1)
-                : '0.0';
-
-            document.getElementById('average-rating').textContent = `⭐ ${averageRating}`;
-            document.getElementById('total-ratings').textContent = `${totalRatings} rating${totalRatings !== 1 ? 's' : ''}`;
-
-            // Show rating form
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('rating-form').style.display = 'block';
         }
 
         function setRating(rating) {
@@ -398,7 +440,7 @@
         }
 
         // Handle form submission
-        document.getElementById('rating-form-element').addEventListener('submit', (e) => {
+        document.getElementById('rating-form-element').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (currentRating === 0) {
@@ -406,46 +448,54 @@
                 return;
             }
 
-            // Check if user has already rated this outfit
-            const userFingerprint = getUserFingerprint();
-            const ratings = JSON.parse(localStorage.getItem('ratings') || '[]');
-            const existingRating = ratings.find(r => 
-                r.outfitId === currentOutfit.id && 
-                r.userFingerprint === userFingerprint
-            );
+            try {
+                // Check if user has already rated this outfit
+                const userFingerprint = getUserFingerprint();
+                const ratingsQuery = query(collection(db, 'ratings'), where('outfitId', '==', currentOutfit.id));
+                const ratingsSnapshot = await getDocs(ratingsQuery);
+                const ratings = ratingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const existingRating = ratings.find(r => r.userFingerprint === userFingerprint);
 
-            if (existingRating) {
-                alert('You have already rated this outfit! Each person can only rate once.');
-                return;
+                if (existingRating) {
+                    alert('You have already rated this outfit! Each person can only rate once.');
+                    return;
+                }
+
+                const comment = document.getElementById('comment').value;
+                
+                // Add new rating to Firebase
+                const newRating = {
+                    id: Date.now().toString(),
+                    outfitId: currentOutfit.id,
+                    rating: currentRating,
+                    comment: comment,
+                    createdAt: new Date().toISOString(),
+                    userFingerprint: userFingerprint
+                };
+                
+                await addDoc(collection(db, 'ratings'), newRating);
+
+                // Update outfit stats in Firebase
+                const outfitQuery = query(collection(db, 'outfits'), where('id', '==', currentOutfit.id));
+                const outfitSnapshot = await getDocs(outfitQuery);
+                if (!outfitSnapshot.empty) {
+                    const outfitDoc = outfitSnapshot.docs[0];
+                    const updatedRatings = [...ratings, newRating];
+                    const totalRatings = updatedRatings.length;
+                    const averageRating = updatedRatings.reduce((sum, r) => sum + r.rating, 0) / totalRatings;
+                    
+                    await updateDoc(doc(db, 'outfits', outfitDoc.id), {
+                        totalRatings: totalRatings,
+                        averageRating: averageRating
+                    });
+                }
+
+                showSuccess();
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                alert('Error submitting rating. Please try again.');
             }
-
-            const comment = document.getElementById('comment').value;
-            
-            // Add new rating
-            const newRating = {
-                id: Date.now().toString(),
-                outfitId: currentOutfit.id,
-                rating: currentRating,
-                comment: comment,
-                createdAt: new Date().toISOString(),
-                userFingerprint: userFingerprint
-            };
-            
-            ratings.push(newRating);
-            localStorage.setItem('ratings', JSON.stringify(ratings));
-
-            // Update outfit stats
-            const outfits = JSON.parse(localStorage.getItem('outfits') || '[]');
-            const outfitIndex = outfits.findIndex(o => o.id === currentOutfit.id);
-            
-            if (outfitIndex !== -1) {
-                const outfitRatings = ratings.filter(r => r.outfitId === currentOutfit.id);
-                outfits[outfitIndex].totalRatings = outfitRatings.length;
-                outfits[outfitIndex].averageRating = outfitRatings.reduce((sum, r) => sum + r.rating, 0) / outfitRatings.length;
-                localStorage.setItem('outfits', JSON.stringify(outfits));
-            }
-
-            showSuccess();
         });
 
         // Function to generate a simple user fingerprint
