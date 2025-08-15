@@ -280,6 +280,104 @@
             color: #495057;
         }
 
+        /* Modal Styles */
+        .outfit-details-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .outfit-details-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .modal-content {
+            padding: 24px;
+        }
+
+        .comments-section {
+            margin-top: 24px;
+        }
+
+        .comments-section h4 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .comment-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .comment-rating {
+            font-size: 16px;
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+
+        .comment-text {
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .comment-date {
+            color: #666;
+            font-size: 12px;
+        }
+
         .nav-tabs {
             display: flex;
             margin-bottom: 20px;
@@ -632,7 +730,7 @@
                 const ratingBreakdown = getRatingBreakdown(outfitRatings);
                 
                 return `
-                    <div class="outfit-card">
+                    <div class="outfit-card" onclick="showOutfitDetails('${outfit.id}')" style="cursor: pointer;">
                         <img src="${outfit.image}" class="outfit-image" alt="Outfit">
                         <div class="outfit-content">
                             ${outfit.description ? `<p class="outfit-description">${outfit.description}</p>` : ''}
@@ -641,19 +739,7 @@
                                 <span>${new Date(outfit.createdAt).toLocaleDateString()}</span>
                             </div>
                             
-                            ${outfit.totalRatings > 0 ? `
-                                <div class="rating-breakdown">
-                                    <h4 style="margin: 16px 0 8px 0; color: #333;">Rating Breakdown:</h4>
-                                    ${ratingBreakdown.map(item => `
-                                        <div class="rating-item">
-                                            <span class="rating-stars">${'⭐'.repeat(item.rating)}</span>
-                                            <span class="rating-count">${item.count} ${item.count === 1 ? 'person' : 'people'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
-                            
-                            <div class="link-display">
+                            <div class="link-display" onclick="event.stopPropagation();">
                                 <p style="margin-bottom: 8px; font-weight: 600;">Shareable Link:</p>
                                 <input type="text" value="${outfit.shareableLink}" readonly onclick="this.select()">
                                 <button class="btn" onclick="copyToClipboard('${outfit.shareableLink}')" 
@@ -665,6 +751,81 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // Function to show outfit details
+        function showOutfitDetails(outfitId) {
+            const outfit = outfits.find(o => o.id === outfitId);
+            const outfitRatings = ratings.filter(r => r.outfitId === outfitId);
+            const ratingBreakdown = getRatingBreakdown(outfitRatings);
+            
+            // Create detailed view HTML
+            const detailsHTML = `
+                <div class="outfit-details-overlay" onclick="closeOutfitDetails()">
+                    <div class="outfit-details-modal" onclick="event.stopPropagation();">
+                        <div class="modal-header">
+                            <h2>Outfit Details</h2>
+                            <button class="close-btn" onclick="closeOutfitDetails()">×</button>
+                        </div>
+                        
+                        <div class="modal-content">
+                            <img src="${outfit.image}" class="outfit-image" alt="Outfit">
+                            
+                            ${outfit.description ? `<p class="outfit-description">${outfit.description}</p>` : ''}
+                            
+                            <div class="outfit-stats">
+                                <span>⭐ ${outfit.averageRating.toFixed(1)} (${outfit.totalRatings} ratings)</span>
+                                <span>${new Date(outfit.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            
+                            ${outfit.totalRatings > 0 ? `
+                                <div class="rating-breakdown">
+                                    <h4>Rating Breakdown:</h4>
+                                    ${ratingBreakdown.map(item => `
+                                        <div class="rating-item">
+                                            <span class="rating-stars">${'⭐'.repeat(item.rating)}</span>
+                                            <span class="rating-count">${item.count} ${item.count === 1 ? 'person' : 'people'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="comments-section">
+                                    <h4>Comments:</h4>
+                                    ${outfitRatings.filter(r => r.comment && r.comment.trim()).map(rating => `
+                                        <div class="comment-item">
+                                            <div class="comment-rating">${'⭐'.repeat(rating.rating)}</div>
+                                            <div class="comment-text">${rating.comment}</div>
+                                            <div class="comment-date">${new Date(rating.createdAt).toLocaleDateString()}</div>
+                                        </div>
+                                    `).join('') || '<p style="color: #666; font-style: italic;">No comments yet</p>'}
+                                </div>
+                            ` : '<p style="color: #666; font-style: italic;">No ratings yet</p>'}
+                            
+                            <div class="link-display">
+                                <p style="margin-bottom: 8px; font-weight: 600;">Shareable Link:</p>
+                                <input type="text" value="${outfit.shareableLink}" readonly onclick="this.select()">
+                                <button class="btn" onclick="copyToClipboard('${outfit.shareableLink}')" 
+                                        style="margin-top: 12px; font-size: 14px; padding: 8px 16px;">
+                                    Copy Link
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', detailsHTML);
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Function to close outfit details
+        function closeOutfitDetails() {
+            const overlay = document.querySelector('.outfit-details-overlay');
+            if (overlay) {
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+            }
         }
 
         // Function to get rating breakdown
