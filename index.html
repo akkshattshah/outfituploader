@@ -490,6 +490,37 @@
             font-size: 14px;
         }
 
+        /* Account Info Styles */
+        .account-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+
+        .info-item span {
+            color: #666;
+            font-weight: 500;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 16px;
@@ -545,6 +576,10 @@
                 <h2 class="text-center mb-4">Create Account</h2>
                 <form id="signup-form-element">
                     <div class="form-group">
+                        <label for="signup-fullname">Full Name</label>
+                        <input type="text" id="signup-fullname" class="form-control" required>
+                    </div>
+                    <div class="form-group">
                         <label for="signup-email">Email</label>
                         <input type="email" id="signup-email" class="form-control" required>
                     </div>
@@ -578,6 +613,7 @@
             <div class="nav-tabs">
                 <div class="nav-tab active" onclick="showTab('upload', event)">Upload Outfit</div>
                 <div class="nav-tab" onclick="showTab('my-outfits', event)">My Outfits</div>
+                <div class="nav-tab" onclick="showTab('my-account', event)">My Account</div>
             </div>
 
             <!-- Upload Outfit Tab -->
@@ -613,6 +649,34 @@
                     <h2 class="text-center mb-4">My Outfits</h2>
                     <div id="outfits-list">
                         <div class="loading">No outfits uploaded yet. Upload your first outfit to get started!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Account Tab -->
+            <div id="my-account-tab" class="tab-content">
+                <div class="card">
+                    <h2 class="text-center mb-4">My Account</h2>
+                    <div class="account-info">
+                        <div class="info-item">
+                            <label>Full Name:</label>
+                            <span id="account-fullname">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Email:</label>
+                            <span id="account-email">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Account Created:</label>
+                            <span id="account-created">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Total Outfits:</label>
+                            <span id="account-outfits">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button onclick="signOutUser()" class="btn btn-secondary">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -699,9 +763,15 @@
         document.getElementById('signup-form-element').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const fullName = document.getElementById('signup-fullname').value;
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
             const confirmPassword = document.getElementById('signup-confirm-password').value;
+            
+            if (!fullName.trim()) {
+                alert('Please enter your full name!');
+                return;
+            }
             
             if (password !== confirmPassword) {
                 alert('Passwords do not match!');
@@ -716,6 +786,15 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 currentUser = userCredential.user;
+                
+                // Store additional user data in Firestore
+                await addDoc(collection(db, 'users'), {
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    fullName: fullName,
+                    createdAt: new Date().toISOString()
+                });
+                
                 showUserProfile(currentUser);
                 loadDataFromFirebase();
             } catch (error) {
@@ -775,10 +854,49 @@
                 
                 ratings = allRatings;
 
+                // Load user profile data
+                await loadUserProfile();
+
                 console.log('Data loaded from Firebase:', { outfits: outfits.length, ratings: ratings.length });
             } catch (error) {
                 console.error('Error loading data from Firebase:', error);
             }
+        }
+
+        // Load user profile data
+        async function loadUserProfile() {
+            try {
+                const userQuery = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
+                const userSnapshot = await getDocs(userQuery);
+                
+                if (!userSnapshot.empty) {
+                    const userData = userSnapshot.docs[0].data();
+                    updateAccountInfo(userData);
+                } else {
+                    // Fallback for users who signed up before we added the users collection
+                    updateAccountInfo({
+                        fullName: 'Not set',
+                        email: currentUser.email,
+                        createdAt: currentUser.metadata.creationTime
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                updateAccountInfo({
+                    fullName: 'Error loading',
+                    email: currentUser.email,
+                    createdAt: 'Unknown'
+                });
+            }
+        }
+
+        // Update account information display
+        function updateAccountInfo(userData) {
+            document.getElementById('account-fullname').textContent = userData.fullName || 'Not set';
+            document.getElementById('account-email').textContent = userData.email || currentUser.email;
+            document.getElementById('account-created').textContent = userData.createdAt ? 
+                new Date(userData.createdAt).toLocaleDateString() : 'Unknown';
+            document.getElementById('account-outfits').textContent = outfits.length;
         }
 
         // Initialize data loading - wait for Firebase to be ready
@@ -889,6 +1007,7 @@
                 id: outfitId,
                 userId: currentUser.uid,
                 userEmail: currentUser.email,
+                userName: currentUser.displayName || 'Anonymous',
                 image: preview.src,
                 description: description,
                 createdAt: new Date().toISOString(),
