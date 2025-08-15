@@ -35,6 +35,10 @@
         window.doc = doc;
         window.query = query;
         window.where = where;
+        
+        // Signal that Firebase is ready
+        window.firebaseReady = true;
+        window.dispatchEvent(new Event('firebaseReady'));
     </script>
 
     <style>
@@ -616,8 +620,16 @@
             }
         }
 
-        // Initialize data loading
-        window.addEventListener('load', loadDataFromFirebase);
+        // Initialize data loading - wait for Firebase to be ready
+        function initializeApp() {
+            if (window.firebaseReady) {
+                loadDataFromFirebase();
+            } else {
+                window.addEventListener('firebaseReady', loadDataFromFirebase);
+            }
+        }
+        
+        window.addEventListener('load', initializeApp);
 
         // Tab functionality
         function showTab(tabName) {
@@ -688,6 +700,12 @@
             
             if (!photoInput.files[0]) {
                 alert('Please select an image');
+                return;
+            }
+
+            // Check if Firebase is ready
+            if (!window.firebaseReady) {
+                alert('Please wait, the app is still loading...');
                 return;
             }
 
@@ -802,6 +820,12 @@
             
             if (currentRating === 0) {
                 alert('Please select a rating');
+                return;
+            }
+
+            // Check if Firebase is ready
+            if (!window.firebaseReady) {
+                alert('Please wait, the app is still loading...');
                 return;
             }
 

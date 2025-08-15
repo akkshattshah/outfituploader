@@ -35,6 +35,10 @@
         window.doc = doc;
         window.query = query;
         window.where = where;
+        
+        // Signal that Firebase is ready
+        window.firebaseReady = true;
+        window.dispatchEvent(new Event('firebaseReady'));
     </script>
 
     <style>
@@ -351,14 +355,23 @@
         let currentRating = 0;
         let currentOutfit = null;
 
-        // Get outfit ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const outfitId = urlParams.get('outfit');
+        // Initialize app when Firebase is ready
+        function initializeApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const outfitId = urlParams.get('outfit');
 
-        if (!outfitId) {
-            showError('No outfit ID provided');
+            if (!outfitId) {
+                showError('No outfit ID provided');
+            } else {
+                loadOutfit(outfitId);
+            }
+        }
+
+        // Wait for Firebase to be ready
+        if (window.firebaseReady) {
+            initializeApp();
         } else {
-            loadOutfit(outfitId);
+            window.addEventListener('firebaseReady', initializeApp);
         }
 
         async function loadOutfit(outfitId) {
@@ -445,6 +458,12 @@
             
             if (currentRating === 0) {
                 alert('Please select a rating');
+                return;
+            }
+
+            // Check if Firebase is ready
+            if (!window.firebaseReady) {
+                alert('Please wait, the app is still loading...');
                 return;
             }
 
