@@ -780,7 +780,12 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 currentUser = userCredential.user;
                 
-                                 // Store additional user data in Firestore
+                                 // Update the current user's display name first
+                 await updateProfile(currentUser, {
+                     displayName: fullName
+                 });
+                 
+                 // Store additional user data in Firestore
                  await addDoc(collection(db, 'users'), {
                      uid: currentUser.uid,
                      email: currentUser.email,
@@ -788,13 +793,14 @@
                      createdAt: new Date().toISOString()
                  });
                  
-                 // Update the current user's display name
-                 await updateProfile(currentUser, {
-                     displayName: fullName
-                 });
-                
-                showUserProfile(currentUser);
-                loadDataFromFirebase();
+                                  // Update the currentUser object to reflect the new display name
+                 currentUser = auth.currentUser;
+                 
+                 // Small delay to ensure profile update is complete
+                 setTimeout(() => {
+                     showUserProfile(currentUser);
+                     loadDataFromFirebase();
+                 }, 100);
             } catch (error) {
                 console.error('Signup error:', error);
                 let errorMessage = 'Account creation failed. ';
@@ -889,7 +895,13 @@
 
                  // Update account information display
          function updateAccountInfo(userData) {
-             document.getElementById('account-fullname').textContent = userData.fullName || 'Not set';
+             console.log('Updating account info with:', userData);
+             console.log('Current user display name:', currentUser.displayName);
+             
+             // Try multiple sources for the full name
+             const fullName = userData.fullName || currentUser.displayName || 'Not set';
+             
+             document.getElementById('account-fullname').textContent = fullName;
              document.getElementById('account-email').textContent = userData.email || currentUser.email;
          }
 
