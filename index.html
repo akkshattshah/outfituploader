@@ -1286,17 +1286,23 @@
                     const docRef = await addDoc(collection(db, 'outfits'), outfit);
                     console.log('Outfit saved successfully with ID:', docRef.id);
                     
+                    // Generate the long URL first
+                    const longUrl = `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${docRef.id}`;
+                    
+                    // Shorten the URL using TinyURL API
+                    const shortUrl = await shortenUrl(longUrl);
+                    
                     // Add the document ID and shareable link to the outfit
                     const outfitWithId = {
                         ...outfit,
                         id: docRef.id,
-                        shareableLink: `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${docRef.id}`
+                        shareableLink: shortUrl
                     };
                     
                     // Update local array
                     outfits.push(outfitWithId);
 
-                    alert('Outfit uploaded successfully! Share this link: ' + outfitWithId.shareableLink);
+                    alert('Outfit uploaded successfully! Share this link: ' + shortUrl);
                     
                     // Reset form
                     uploadForm.reset();
@@ -1365,6 +1371,23 @@
             return hash.toString();
         }
 
+        // Function to shorten URL using TinyURL API
+        async function shortenUrl(longUrl) {
+            try {
+                const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+                if (response.ok) {
+                    const shortUrl = await response.text();
+                    return shortUrl;
+                } else {
+                    console.error('TinyURL API error:', response.status);
+                    return longUrl; // Fallback to original URL
+                }
+            } catch (error) {
+                console.error('Error shortening URL:', error);
+                return longUrl; // Fallback to original URL
+            }
+        }
+
                  // Load outfits
          function loadOutfits() {
              const outfitsList = document.getElementById('outfits-list');
@@ -1380,7 +1403,24 @@
                  const ratingBreakdown = getRatingBreakdown(outfitRatings);
                  
                  // Generate shareable link if it doesn't exist
-                 const shareableLink = outfit.shareableLink || `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${outfit.id}`;
+                 let shareableLink = outfit.shareableLink || `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${outfit.id}`;
+                 
+                 // If it's a long URL (not already shortened), create a placeholder that will be shortened
+                 const isLongUrl = shareableLink.includes('akkshattshah.github.io/outfituploader/rate.html');
+                 const displayLink = isLongUrl ? 'Shortening...' : shareableLink;
+                 
+                 // If it's a long URL, schedule it to be shortened
+                 if (isLongUrl) {
+                     setTimeout(async () => {
+                         const shortUrl = await shortenUrl(shareableLink);
+                         const linkInput = document.getElementById(`link-${outfit.id}`);
+                         if (linkInput) {
+                             linkInput.value = shortUrl;
+                             // Update the outfit object with the short URL
+                             outfit.shareableLink = shortUrl;
+                         }
+                     }, 1000); // Short delay to avoid overwhelming the API
+                 }
                  
                  return `
                      <div class="outfit-card" onclick="showOutfitDetails('${outfit.id}')" style="cursor: pointer;">
@@ -1394,7 +1434,7 @@
                              
                              <div class="link-display" onclick="event.stopPropagation();">
                                  <p style="margin-bottom: 8px; font-weight: 600;">Shareable Link:</p>
-                                 <input type="text" value="${shareableLink}" readonly onclick="this.select()">
+                                 <input type="text" value="${displayLink}" readonly onclick="this.select()" id="link-${outfit.id}">
                                  <button class="btn" onclick="copyToClipboard('${shareableLink}')" 
                                          style="margin-top: 12px; font-size: 14px; padding: 8px 16px;">
                                      Copy Link
@@ -1407,13 +1447,20 @@
          }
 
                  // Function to show outfit details
-         function showOutfitDetails(outfitId) {
+         async function showOutfitDetails(outfitId) {
              const outfit = outfits.find(o => o.id === outfitId);
              const outfitRatings = ratings.filter(r => r.outfitId === outfitId);
              const ratingBreakdown = getRatingBreakdown(outfitRatings);
              
              // Generate shareable link if it doesn't exist
-             const shareableLink = outfit.shareableLink || `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${outfit.id}`;
+             let shareableLink = outfit.shareableLink || `https://akkshattshah.github.io/outfituploader/rate.html?outfit=${outfit.id}`;
+             
+             // If it's a long URL, shorten it
+             if (shareableLink.includes('akkshattshah.github.io/outfituploader/rate.html')) {
+                 shareableLink = await shortenUrl(shareableLink);
+                 // Update the outfit object with the short URL
+                 outfit.shareableLink = shareableLink;
+             }
              
              // Create detailed view HTML
              const detailsHTML = `
