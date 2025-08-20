@@ -1955,11 +1955,32 @@
             const shareLink = document.getElementById('modal-share-link').value;
             const outfitImage = document.getElementById('modal-outfit-image').src;
             
-            // Create a beautiful story image
-            createInstagramStoryImage(outfitImage, shareLink);
+            // Try to open Instagram app directly
+            openInstagramWithStory(outfitImage, shareLink);
         }
 
-        function createInstagramStoryImage(outfitImage, shareLink) {
+        function openInstagramWithStory(outfitImage, shareLink) {
+            // Create the story image first
+            createInstagramStoryImage(outfitImage, shareLink, function(storyImageUrl) {
+                // Try to open Instagram app
+                const instagramUrl = 'instagram://story-camera';
+                
+                // Check if Instagram app is available
+                const link = document.createElement('a');
+                link.href = instagramUrl;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                
+                // Try to open Instagram app
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show optimized instructions
+                showOptimizedInstagramInstructions(storyImageUrl, shareLink);
+            });
+        }
+
+        function createInstagramStoryImage(outfitImage, shareLink, callback) {
             // Create canvas for Instagram story (1080x1920)
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -2018,41 +2039,78 @@
                 ctx.font = '30px Inter, sans-serif';
                 ctx.fillText('OutfitRater', 540, 1800);
                 
-                // Convert to blob and download
+                // Convert to blob and create URL
                 canvas.toBlob(function(blob) {
                     const url = URL.createObjectURL(blob);
+                    
+                    // Download the image
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = 'outfit-story.png';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
                     
-                    // Show instructions
-                    showInstagramInstructions();
+                    // Call callback with the URL
+                    callback(url);
                 }, 'image/png');
             };
             
             img.src = outfitImage;
         }
 
-        function showInstagramInstructions() {
+        function showOptimizedInstagramInstructions(storyImageUrl, shareLink) {
             const instructions = `
-🎉 Story image downloaded!
+🚀 Instagram Story Ready!
 
-To share to Instagram Story:
-1. Open Instagram
-2. Tap the camera icon
-3. Tap the gallery icon
-4. Select the downloaded image
-5. Add the link: ${document.getElementById('modal-share-link').value}
-6. Post to your story!
+📱 **Quick Steps:**
+1. Instagram should have opened (if app is installed)
+2. If not, open Instagram manually
+3. Tap the camera icon for Stories
+4. Tap the gallery icon (bottom left)
+5. Select "outfit-story.png" from your downloads
+6. Add the link: ${shareLink}
+7. Post to your story!
 
-Your friends can tap the link to rate your outfit! 🚀
+💡 **Pro Tip:** The image is already optimized for Instagram Stories!
+
+Your friends can tap the link to rate your outfit! 🎉
             `;
             
-            alert(instructions);
+            // Create a better modal instead of alert
+            showInstructionsModal(instructions);
+        }
+
+        function showInstructionsModal(instructions) {
+            const modalHTML = `
+                <div class="modal-overlay" style="display: flex; z-index: 3000;">
+                    <div class="success-modal" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h2>📱 Instagram Story Guide</h2>
+                            <button class="close-btn" onclick="closeInstructionsModal()">×</button>
+                        </div>
+                        <div class="modal-content">
+                            <div style="white-space: pre-line; line-height: 1.6; color: #333;">
+                                ${instructions}
+                            </div>
+                            <div class="modal-actions" style="margin-top: 24px;">
+                                <button class="btn" onclick="closeInstructionsModal()">Got it!</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeInstructionsModal() {
+            const modal = document.querySelector('.modal-overlay[style*="z-index: 3000"]');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
         }
 
         // Close modal when clicking outside
