@@ -780,10 +780,180 @@
                 padding: 12px;
             }
 
-            .upload-area p {
-                font-size: 14px !important;
-            }
+                    .upload-area p {
+            font-size: 14px !important;
         }
+    }
+
+    /* Success Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .success-modal {
+        background: white;
+        border-radius: 24px;
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 24px 16px;
+        border-bottom: 1px solid #e1e5e9;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        color: #333;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .modal-content {
+        padding: 24px;
+    }
+
+    .outfit-preview {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-outfit-img {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        margin-bottom: 16px;
+    }
+
+    .rating-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        display: inline-block;
+    }
+
+    .rating-text {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .share-section {
+        margin-bottom: 24px;
+    }
+
+    .share-section h3 {
+        margin: 0 0 8px 0;
+        color: #333;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .share-section p {
+        margin: 0 0 20px 0;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .share-buttons {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .btn-instagram {
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .btn-instagram:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 39, 67, 0.4);
+    }
+
+    .btn-copy {
+        background: #6c757d;
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .btn-copy:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .modal-actions .btn {
+        flex: 1;
+        max-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+        .success-modal {
+            margin: 10px;
+            max-height: 85vh;
+        }
+
+        .modal-content {
+            padding: 20px;
+        }
+
+        .share-buttons {
+            flex-direction: column;
+        }
+
+        .modal-actions {
+            flex-direction: column;
+        }
+
+        .modal-actions .btn {
+            max-width: none;
+        }
+    }
     </style>
 </head>
 <body>
@@ -972,6 +1142,55 @@
                      </div>
                  </div>
              </div>
+        </div>
+    </div>
+
+    <!-- Success Modal with Instagram Sharing -->
+    <div id="success-modal" class="modal-overlay" style="display: none;">
+        <div class="success-modal">
+            <div class="modal-header">
+                <h2>🎉 Outfit Uploaded Successfully!</h2>
+                <button class="close-btn" onclick="closeSuccessModal()">×</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="outfit-preview">
+                    <img id="modal-outfit-image" src="" alt="Your Outfit" class="modal-outfit-img">
+                    <div class="rating-preview">
+                        <span class="rating-text">Ready for anonymous feedback!</span>
+                    </div>
+                </div>
+                
+                <div class="share-section">
+                    <h3>Share Your Outfit</h3>
+                    <p>Let others rate your style anonymously!</p>
+                    
+                    <div class="share-buttons">
+                        <button class="btn btn-instagram" onclick="shareToInstagramStory()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right: 8px;">
+                                <path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                            Share to Instagram Story
+                        </button>
+                        
+                        <button class="btn btn-copy" onclick="copyShareLink()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right: 8px;">
+                                <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                            </svg>
+                            Copy Link
+                        </button>
+                    </div>
+                    
+                    <div class="link-display">
+                        <input type="text" id="modal-share-link" readonly onclick="this.select()">
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeSuccessModal()">View My Outfits</button>
+                    <button class="btn" onclick="uploadAnotherOutfit()">Upload Another</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1419,12 +1638,12 @@
                     // Update local array
                     outfits.push(outfitWithId);
 
-                    alert('Outfit uploaded successfully! Share this link: ' + shortUrl);
+                    // Show success modal with Instagram sharing option
+                    showSuccessModal(outfitWithId, shortUrl);
                     
                     // Reset form
                     uploadForm.reset();
                     preview.classList.add('hidden');
-                    showTab('my-outfits');
                     return; // Success, exit the function
                 } catch (error) {
                     retryCount++;
@@ -1682,6 +1901,167 @@
                 alert('Failed to copy link');
             });
         }
+
+        // Success Modal Functions
+        function showSuccessModal(outfit, shareLink) {
+            // Set outfit image
+            document.getElementById('modal-outfit-image').src = outfit.image;
+            
+            // Set share link
+            document.getElementById('modal-share-link').value = shareLink;
+            
+            // Show modal
+            document.getElementById('success-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            showTab('my-outfits');
+        }
+
+        function uploadAnotherOutfit() {
+            closeSuccessModal();
+            showTab('upload');
+        }
+
+        function copyShareLink() {
+            const linkInput = document.getElementById('modal-share-link');
+            linkInput.select();
+            navigator.clipboard.writeText(linkInput.value).then(() => {
+                // Show success feedback
+                const copyBtn = document.querySelector('.btn-copy');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right: 8px;">
+                        <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                    Copied!
+                `;
+                copyBtn.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '#6c757d';
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy link');
+            });
+        }
+
+        // Instagram Story Sharing
+        function shareToInstagramStory() {
+            const shareLink = document.getElementById('modal-share-link').value;
+            const outfitImage = document.getElementById('modal-outfit-image').src;
+            
+            // Create a beautiful story image
+            createInstagramStoryImage(outfitImage, shareLink);
+        }
+
+        function createInstagramStoryImage(outfitImage, shareLink) {
+            // Create canvas for Instagram story (1080x1920)
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1080;
+            canvas.height = 1920;
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, 1920);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1080, 1920);
+            
+            // Load outfit image
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                // Calculate image dimensions to fit nicely
+                const maxWidth = 800;
+                const maxHeight = 800;
+                let { width, height } = img;
+                
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = (width * maxHeight) / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                // Center the image
+                const x = (1080 - width) / 2;
+                const y = 400;
+                
+                // Add white border around image
+                ctx.fillStyle = 'white';
+                ctx.fillRect(x - 10, y - 10, width + 20, height + 20);
+                
+                // Draw image
+                ctx.drawImage(img, x, y, width, height);
+                
+                // Add text overlay
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 60px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Rate My Style!', 540, 200);
+                
+                ctx.font = '40px Inter, sans-serif';
+                ctx.fillText('Tap to rate anonymously', 540, 1400);
+                
+                // Add app branding
+                ctx.font = '30px Inter, sans-serif';
+                ctx.fillText('OutfitRater', 540, 1800);
+                
+                // Convert to blob and download
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'outfit-story.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    // Show instructions
+                    showInstagramInstructions();
+                }, 'image/png');
+            };
+            
+            img.src = outfitImage;
+        }
+
+        function showInstagramInstructions() {
+            const instructions = `
+🎉 Story image downloaded!
+
+To share to Instagram Story:
+1. Open Instagram
+2. Tap the camera icon
+3. Tap the gallery icon
+4. Select the downloaded image
+5. Add the link: ${document.getElementById('modal-share-link').value}
+6. Post to your story!
+
+Your friends can tap the link to rate your outfit! 🚀
+            `;
+            
+            alert(instructions);
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('success-modal');
+            if (event.target === modal) {
+                closeSuccessModal();
+            }
+        });
 
 
     </script>
